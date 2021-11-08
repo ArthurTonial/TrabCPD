@@ -16,3 +16,5 @@ posição
 ## Implementação
 - fase 1 : construção e inicialização das estruturas de dados necessárias para suportar as consultas
 - fase 2 : fazer as pesquisas listadas na seção anterior, bem como a exibição dos resultados.
+
+<img src="https://pbs.twimg.com/media/DcjnyY7X0AAlqn-.jpg" alt="MarineGEO circle logo" style="height: 100px; width:100px;"/>
