@@ -3,13 +3,16 @@
 
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <fstream>
 #include <vector>
+#include <cmath>
+#include <sstream>
 
 #define NAME_MAX 255
 #define BUFFER_MAX 511
 #define PLAYERS_ID_MAX 260000
-#define USER_ID_MAX 140000
+#define USERS_ID_MAX 140000
 #define PLAYER_MAX 18946
 #define USER_MAX 10002
 
@@ -35,10 +38,12 @@ void add_positions(string positions_string, int id);
 // funcoes de arvore trie
 Trie_node *new_node(char letter);
 void trie_insert(Trie_node **node, const char *key, int id);
-void trie_search(Trie_node *root, string query);
+vector<int> trie_search(Trie_node *root, string query);
 
 // funcao de menu
 void read_cmd(string cmd);
 void print();
+
+void player_search(Trie_node *root, string player_name);
 
 #endif //TRABCPD_LIB_H
