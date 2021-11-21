@@ -10,7 +10,7 @@ int main() {
 
         do {
             cout << "\nDigite o comando desejado [\"0\" para finalizar]: \n$ ";
-            cin >> cmd;
+            getline(cin, cmd);
             read_cmd(cmd);
         } while(cmd.compare("0\0"));
     }

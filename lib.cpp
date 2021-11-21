@@ -192,17 +192,17 @@ void trie_insert(Trie_node **node, const char *key, int id) {
 void read_cmd(string cmd) {
 
     // player <name or prefix>
-    //if (!cmd.compare(0, 6, "player ")) {
-        player_search(players_trie_root, cmd/*.substr(7)*/);
-    //}
+    if (cmd.compare(0, 6, "player ")) {
+        player_search(players_trie_root, cmd.substr(7));
+    }
 
-    /*// user <userID>
-    else if (!cmd.compare(0, 4, "user ")) {
-        //user_ratings_search(stoi(cmd.substr(5)));
+    // user <userID>
+    else if (cmd.compare(0, 4, "user ")) {
+        user_ratings_search(stoi(cmd.substr(5)));
     }
 
     // top<N> ‘<position>’
-    else if (!cmd.compare(0, 2, "top")) {
+    else if (cmd.compare(0, 2, "top")) {
        
         int N;
         string position;
@@ -220,7 +220,7 @@ void read_cmd(string cmd) {
     }
 
     // tags <list of tags>
-    else if (!cmd.compare(0, 4, "tags ")) {
+    else if (cmd.compare(0, 4, "tags ")) {
                 
         for (int i = 5; i < cmd.size(); i++) {
             if (cmd[i] != ' ' and cmd[i] != '\'') {
@@ -235,7 +235,7 @@ void read_cmd(string cmd) {
     }
 
     // comando invalido
-    else cout << "Comando invalido\n";*/
+    else cout << "Comando invalido\n";
 }
 
 void traverse(Trie_node *root, vector<int> *fifa_ids){
@@ -300,8 +300,4 @@ void player_search(Trie_node *root, string player_name) {
 
     }
 
-}
-
-void print(){
-    cout << playerID_translator[222843];
 }
