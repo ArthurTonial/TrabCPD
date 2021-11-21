@@ -7,9 +7,16 @@ Trie_node *players_trie_root;
 Trie_node *tags_trie_root;
 
 // arrays de acesso rapido a partir de IDs
-vector<pair<int,double> > user_ratings[USERS_MAX];
-double sum_rating[PLAYERS_MAX];
-int total_rating[PLAYERS_MAX];
+int playerID_translator[PLAYERS_ID_MAX];
+int userID_translator[PLAYERS_ID_MAX];
+vector<pair<int,double>> user_ratings[USER_MAX];
+vector<string> player_positions[PLAYER_MAX];
+string player_names[PLAYER_MAX];
+double sum_rating[PLAYER_MAX];
+int total_rating[PLAYER_MAX];
+
+int curr_player_number = 1;
+
 
 // -> FUNCOES PRINCIPAIS DE INICIALIZACAO DE DADOS
 // funcao para ler arquivo de jogadores
@@ -24,7 +31,7 @@ int read_players_csv() {
     }
     else {
         cout << "> players.csv aberto\n";
-
+        
 		// pula primeira linha
         string aux_string; 
 		getline(csv, aux_string);
@@ -32,15 +39,15 @@ int read_players_csv() {
 		// preenche dados dos jogadores
         while (csv) {
 			int sofifa_id; csv >> sofifa_id;
+            playerID_translator[sofifa_id] = curr_player_number;
             char dump; csv >> dump;
 
 			getline(csv, aux_string, ',');
 			trie_insert(&players_trie_root, aux_string.c_str(), sofifa_id);
-
 			getline(csv, aux_string);
 			add_positions(aux_string, sofifa_id);
+            curr_player_number++;
         }
-
         csv.close();
         return 0;
     }
@@ -50,7 +57,7 @@ int read_players_csv() {
 int read_rating_csv() {
 
     // abre arquivo de leitura
-    ifstream csv("dados/minirating.csv");
+    ifstream csv("dados/rating.csv");
 
     if (!csv.is_open()) {
         cout << "> erro ao abrir rating.csv\n";
@@ -71,11 +78,11 @@ int read_rating_csv() {
             csv >> dump;
 			double rating; csv >> rating;
             
-            sum_rating[sofifa_id] += rating;
-            total_rating[sofifa_id] += 1;
+            sum_rating[playerID_translator[sofifa_id]] += rating;
+            total_rating[playerID_translator[sofifa_id]] += 1;
 
             pair<int,double> user_rating = {sofifa_id, rating};
-            user_ratings[user_id].push_back(user_rating);
+            user_ratings[userID_translator[user_id]].push_back(user_rating);
         }
 
         csv.close();
@@ -121,7 +128,22 @@ int read_tags_csv() {
 // -> FUNCOES AUXILIARES DE INICIALIZACAO DE DADOS
 // faz hash entre id de jogador e suas posicoes
 void add_positions(string positions_string, int id) {
-
+    id = playerID_translator[id];
+    if(positions_string[0] != '"'){
+        player_positions[id].push_back(positions_string);
+    }else{
+        string temp_string;
+        for(int i = 1; i < positions_string.size(); i++){
+            if(positions_string[i] != ',' && positions_string[i] != '"'){
+                temp_string.push_back(positions_string[i]);
+            }else{
+                temp_string.push_back('\0');
+                player_positions[id].push_back(temp_string);
+                temp_string.clear();
+                i++;
+            }
+        }
+    }
 }
 
 // cria novo nodo trie
@@ -158,4 +180,8 @@ void trie_insert(Trie_node **node, const char *key, int id) {
 // -> FUNCOES PRINCIPAIS DE CONSULTAS DE DADOS
 void trie_search(Trie_node *root, string query) {
 
+}
+
+void print(){
+    cout << playerID_translator[222843];
 }

@@ -4,11 +4,8 @@ using namespace std;
 
 int main() {
 
-    read_players_csv();
-    read_rating_csv();
-    read_tags_csv();
-
-    if (false) {
+    if (!read_players_csv() && !read_rating_csv() && !read_tags_csv()) {
+        print();
 
         string cmd;
 
@@ -18,6 +15,7 @@ int main() {
             //read_cmd(cmd);
         } while(cmd.compare("0\0"));
     }
+
 
     cout << "\nObrigado e volte sempre! ^^\n";
 

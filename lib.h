@@ -8,8 +8,10 @@
 
 #define NAME_MAX 255
 #define BUFFER_MAX 511
-#define PLAYERS_MAX 300000
-#define USERS_MAX 250000
+#define PLAYERS_ID_MAX 260000
+#define USER_ID_MAX 140000
+#define PLAYER_MAX 18946
+#define USER_MAX 10002
 
 using namespace std;
 
@@ -37,5 +39,6 @@ void trie_search(Trie_node *root, string query);
 
 // funcao de menu
 void read_cmd(string cmd);
+void print();
 
 #endif //TRABCPD_LIB_H
