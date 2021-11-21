@@ -12,11 +12,11 @@ int read_players_csv() {
     ifstream csv("dados\\players.csv");
 
     if (csv.is_open()) {
-        cout << "Erro ao abrir o arquivo\n";
+        cout << "> erro ao abrir players.csv\n";
         return 1;
     }
     else {
-        cout << "Arquivo aberto\n";
+        cout << "> players.csv aberto\n";
 
 		// pula primeira linha
         string aux_string; 
@@ -28,10 +28,82 @@ int read_players_csv() {
 			int sofifa_id = stoi(aux_string);
 
 			getline(csv, aux_string, ",");
-			trie_insert(trie_root, aux_string, sofifa_id);
+			trie_insert(players_trie_root, aux_string, sofifa_id);
+
+			getline(csv, aux_string);
+			add_positions(aux_string, sofifa_id);
+        }
+
+        csv.close();
+        return 0;
+    }
+}
+
+int read_rating_csv() {
+
+    // abre arquivo de leitura
+    ifstream csv("dados\\rating.csv");
+
+    if (csv.is_open()) {
+        cout << "> erro ao abrir rating.csv\n";
+        return 1;
+    }
+    else {
+        cout << "> rating.csv aberto\n";
+
+		// pula primeira linha
+        string aux_string; 
+		getline(csv, aux_string);
+
+		// preenche dados de rating
+        while (csv) {
+			getline(csv, aux_string, ",");
+			int user_id = stoi(aux_string);
+
+            getline(csv, aux_string, ",");
+			int sofifa_id = stoi(aux_string);
+
+            getline(csv, aux_string);
+			double rating = atof(aux_string);
+
+            sum_rating[sofifa_id] += rating;
+            total_rating[sofifa_id] += 1;
+
+            pair<int,double> user_rating = (sofifa_id, rating);
+            user_ratings[user_id].push_back(user_rating);
+        }
+
+        csv.close();
+        return 0;
+    }
+}
+
+int read_tags_csv() {
+
+    // abre arquivo de leitura
+    ifstream csv("dados\\tags.csv");
+
+    if (csv.is_open()) {
+        cout << "> erro ao abrir tags.csv\n";
+        return 1;
+    }
+    else {
+        cout << "> tags.csv aberto\n";
+
+		// pula primeira linha
+        string aux_string; 
+		getline(csv, aux_string);
+
+		// preenche dados de tags
+        while (csv) {
+			getline(csv, aux_string, ",");
+			int user = stoi(aux_string);
 
 			getline(csv, aux_string, ",");
-			add_positions(aux_string, sofifa_id);
+			int sofifa_id = stoi(aux_string);
+
+			getline(csv, aux_string, ",");
+			trie_insert(tags_trie_root, aux_string, sofifa_id);
         }
 
         csv.close();
@@ -61,50 +133,4 @@ void add_positions(string positions_string, int id) {
     }
 
     // map[id] = positions;
-}
-
-int read_rating_csv() {
-
-    // abre arquivo de leitura
-    ifstream csv("dados\\rating.csv");
-
-    if (csv.is_open()) {
-        cout << "Erro ao abrir o arquivo\n";
-        return 1;
-    }
-    else {
-        cout << "Arquivo aberto\n";
-
-		// pula primeira linha
-        string aux_string; 
-		getline(csv, aux_string);
-
-		// preenche dados dos jogadores
-        while (csv) {
-			getline(csv, aux_string, ",");
-			int user_id = stoi(aux_string);
-
-            getline(csv, aux_string, ",");
-			int sofifa_id = stoi(aux_string);
-
-            getline(csv, aux_string);
-			double rating = atof(aux_string);
-
-            sum_rating[sofifa_id] += rating;
-            total_rating[sofifa_id] += 1;
-
-            pair<int,double> user_rating = (sofifa_id, rating);
-            user_ratings[user_id].push_back(user_rating);
-        }
-
-        csv.close();
-        return 0;
-    }
-}
-
-int read_tags_csv() {
-
-
-
-    return 0;
 }
