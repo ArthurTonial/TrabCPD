@@ -8,6 +8,7 @@
 #include <vector>
 #include <cmath>
 #include <sstream>
+#include <algorithm>
 
 #define NAME_MAX 255
 #define BUFFER_MAX 511
@@ -45,5 +46,6 @@ void read_cmd(string cmd);
 void print();
 
 void player_search(Trie_node *root, string player_name);
+void user_ratings_search(int user_id);
 
 #endif //TRABCPD_LIB_H

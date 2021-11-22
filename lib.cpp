@@ -192,16 +192,20 @@ void trie_insert(Trie_node **node, const char *key, int id) {
 void read_cmd(string cmd) {
 
     // player <name or prefix>
-    if (cmd.compare(0, 6, "player ")) {
+    if (!cmd.compare(0, 6, "player ")) {
+        cout << "rola" << endl;
+        getchar();
         player_search(players_trie_root, cmd.substr(7));
     }
 
     // user <userID>
     else if (cmd.compare(0, 4, "user ")) {
+        cout << "pinto" << endl;
+        getchar();
         user_ratings_search(stoi(cmd.substr(5)));
     }
 
-    // top<N> ‘<position>’
+    /*// top<N> ‘<position>’
     else if (cmd.compare(0, 2, "top")) {
        
         int N;
@@ -232,7 +236,7 @@ void read_cmd(string cmd) {
             }
         }
         //tag_players_search();
-    }
+    }*/
 
     // comando invalido
     else cout << "Comando invalido\n";
@@ -300,4 +304,25 @@ void player_search(Trie_node *root, string player_name) {
 
     }
 
+}
+
+void user_ratings_search(int user_id) {
+
+    int id = userID_translator[user_id];
+
+    // sort de ratings do jogador ()
+
+    cout << "\nSOFIFA_ID  |  NAME\t\t\t\t |   GLOBAL    |   COUNT    |  RATING\n";
+    cout << "---------------------------------------------------------------------------------------\n";
+
+    for (int i = 0; i < min(20, (int)user_ratings[id].size()); i++) {
+        printf("%6d        ", user_ratings[id][i].first); 
+        int id = playerID_translator[user_ratings[id][i].first];
+        printf("%-36s ", player_names[id].c_str()); 
+        float avg_rating = sum_rating[id]/total_rating[id];
+        if(!isnan(avg_rating)) printf("  %.5f\t", avg_rating);
+        else printf("\t      -\t\t"); 
+        printf("     %-6d", total_rating[id]); 
+        printf("\t%0.1f\n", user_ratings[id][i].second);
+    }
 }
