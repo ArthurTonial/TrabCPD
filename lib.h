@@ -10,14 +10,23 @@
 #include <sstream>
 #include <algorithm>
 
-#define NAME_MAX 255
-#define BUFFER_MAX 511
-#define PLAYERS_ID_MAX 260000
-#define USERS_ID_MAX 300000
+#define ID_MAX 300000
 #define PLAYER_MAX 18946
 #define USER_MAX 200000
+#define NAME_MAX 255
+#define POS_COUNT 17
 
 using namespace std;
+
+// estrutura do jogador
+struct Player{
+    int id;
+    string name;
+    vector<string> pos;
+    double sum;
+    int count;
+    double rat = sum/count;
+};
 
 //estrutura de dados para arvore trie
 struct Trie_node{
@@ -28,27 +37,31 @@ struct Trie_node{
     long sofifa_id;
 } ;
 
+Player createPlayer(int id, string name, string pos);
+
 // funcoes de leitura de arquivos
-int read_players_csv();
-int read_rating_csv();
-int read_tags_csv();
+int readPlayers();
+int readRating();
+int readTags();
 
 // faz hash entre id de jogador e suas posicoes
-void add_positions(string positions_string, int id);
+vector<string> addPos(string pos, int id);
 
 // funcoes de arvore trie
 Trie_node *new_node(char letter);
-void trie_insert(Trie_node **node, const char *key, int id);
-vector<int> trie_search(Trie_node *root, string query);
+void trieInsert(Trie_node **node, const char *key, int id);
+vector<int> trieSearch(Trie_node *root, string query);
 
 // funcao de menu
-void read_cmd(string cmd);
+void query(string cmd, string arg);
 void print();
 
-void player_search(Trie_node *root, string player_name);
-void user_ratings_search(int user_id);
-void top_position_search(int N, string position);
-void Hash(string s, int ID);
-int HornerHash(string s);
+void playerSearch(Trie_node *root, string name);
+void userRatingsSearch(int userId);
+void topPositionSearch(int N, string pos);
+void HashPos(string s, int ID);
+void HashTag(string s, int ID);
+int HornerHash(string s, int N);
+vector<int> create_tag_list(string tag);
 
 #endif //TRABCPD_LIB_H

@@ -3,27 +3,33 @@
 using namespace std;
 
 // arvores trie de nomes e tags
-Trie_node *players_trie_root;
-Trie_node *tags_trie_root;
+Trie_node *playersTrie;
 
 // arrays de acesso rapido a partir de IDs
-int playerID_translator[PLAYERS_ID_MAX];
-int userID_translator[USERS_ID_MAX];
+int PlayerID[ID_MAX];
+int UserID[ID_MAX];
 
-vector<pair<int,double>> user_ratings[USER_MAX];
-vector<string> player_positions[PLAYER_MAX];
-string player_names[PLAYER_MAX];
-double sum_rating[PLAYER_MAX];
-int total_rating[PLAYER_MAX];
+vector<pair<int,double>> ratingsByUser[USER_MAX];
+Player playersList[PLAYER_MAX];
 
-int curr_player_number = 1;
-int curr_user_number = 1;
+vector<pair<string, int>> Pos_players[17]; //USO LA EMBAIXO
+vector<pair<string, int>> Tag_players[1000]; //USO LA EMBAIXO
 
-vector<pair<string, int>> Pos_players[17];
+int auxId1 = 1;
+int auxId2 = 1;
+
+Player createPlayer(int id, string name, string pos) {
+
+    Player newPlayer; 
+    newPlayer.id = id;
+    newPlayer.name = name;
+    newPlayer.pos = addPos(pos, id); 
+    return newPlayer;
+}
 
 // -> FUNCOES PRINCIPAIS DE INICIALIZACAO DE DADOS
 // funcao para ler arquivo de jogadores
-int read_players_csv() {
+int readPlayers() {
 
     // abre arquivo de leitura
     ifstream csv("dados/players.csv");
@@ -36,23 +42,22 @@ int read_players_csv() {
         cout << "> players.csv aberto\n";
         
 		// pula primeira linha
-        string aux_string; 
-		getline(csv, aux_string);
-
+        string aux; 
+		getline(csv, aux);
+        
 		// preenche dados dos jogadores
         while (csv) {
-			int sofifa_id; csv >> sofifa_id;
-            playerID_translator[sofifa_id] = curr_player_number;
+			int id; csv >> id;
             char dump; csv >> dump;
-
-			getline(csv, aux_string, ',');
-            player_names[playerID_translator[sofifa_id]] = aux_string;
-			trie_insert(&players_trie_root, aux_string.c_str(), sofifa_id);
-
-			getline(csv, aux_string);
-			add_positions(aux_string, sofifa_id);
-
-            curr_player_number++;
+			string name; getline(csv, name, ',');
+            for (auto & c: name) c = toupper(c);
+			getline(csv, aux);
+			
+            trieInsert(&playersTrie, name.c_str(), id);
+            Player newPlayer = createPlayer(id, name, aux);
+            playersList[auxId1] = newPlayer;
+            
+            PlayerID[id] = auxId1; auxId1++;
         }
         csv.close();
         return 0;
@@ -60,7 +65,7 @@ int read_players_csv() {
 }
 
 // funcao para ler arquivo de ratings
-int read_rating_csv() {
+int readRating() {
 
     // abre arquivo de leitura
     ifstream csv("dados/minirating.csv");
@@ -73,28 +78,25 @@ int read_rating_csv() {
         cout << "> rating.csv aberto\n";
 
 		// pula primeira linha
-        string aux_string; 
-		getline(csv, aux_string);
+        string aux; 
+		getline(csv, aux);
 
 		// preenche dados de rating
         while (csv) {
             int user_id; csv >> user_id;
             char dump; csv >> dump;
-
 			int sofifa_id; csv >> sofifa_id;
             csv >> dump;
-
 			double rating; csv >> rating;
             
-            sum_rating[playerID_translator[sofifa_id]] += rating;
-            total_rating[playerID_translator[sofifa_id]] += 1;
+            playersList[PlayerID[sofifa_id]].sum += rating;
+            playersList[PlayerID[sofifa_id]].count += 1;
 
-            if (userID_translator[user_id] == 0) {
-                userID_translator[user_id] = curr_user_number;
-                curr_user_number++;
+            if (UserID[user_id] == 0) {
+                UserID[user_id] = auxId2; auxId2++;
             }
 
-            user_ratings[userID_translator[user_id]].push_back({sofifa_id, rating});
+            ratingsByUser[UserID[user_id]].push_back({sofifa_id, rating});
         }
         csv.close();
         return 0;
@@ -102,7 +104,7 @@ int read_rating_csv() {
 }
 
 // funcao para ler arquivo de tags
-int read_tags_csv() {
+int readTags() {
 
     // abre arquivo de leitura
     ifstream csv("dados/tags.csv");
@@ -115,55 +117,68 @@ int read_tags_csv() {
         cout << "> tags.csv aberto\n";
 
 		// pula primeira linha
-        string aux_string; 
-		getline(csv, aux_string);
+        string aux; 
+		getline(csv, aux);
 
 		// preenche dados de tags
         while (csv) {
             int user_id; csv >> user_id;
             char dump; csv >> dump;
-
 			int sofifa_id; csv >> sofifa_id;
             csv >> dump;
 
-			getline(csv, aux_string);
-			trie_insert(&tags_trie_root, aux_string.c_str(), sofifa_id);
+            getline(csv, aux);
+            aux.push_back('\0');
+			HashTag(aux, sofifa_id);
         }
         csv.close();
         return 0;
     }
 }
 
+vector<int> create_tag_list(string tag){
+    vector<int> players_with_tag;
+    tag.push_back('\0');
+    int key = HornerHash(tag, 1000);
+
+    for(int i = 0; i < Tag_players[key].size(); i++){
+        int sofifa_id = Tag_players[key][i].second;
+        int player_id = PlayerID[sofifa_id];
+        if(Tag_players[key][i].first == tag && playersList[player_id].count > 2) {
+            players_with_tag.push_back(playersList[player_id].id);
+        }
+    }
+    return players_with_tag;
+}
+
 
 // -> FUNCOES AUXILIARES DE INICIALIZACAO DE DADOS
 // faz hash entre id de jogador e suas posicoes
-void add_positions(string positions_string, int id) {
-    int real_ID = id;
-    id = playerID_translator[id];
+vector<string> addPos(string posString, int id) {
+    
+    vector<string> positions;
 
-    if (positions_string[0] != '"') {
-        player_positions[id].push_back(positions_string); 
-        positions_string.push_back('\0');       
-        Hash(positions_string, real_ID);
+    if (posString[0] != '"') {
+        positions.push_back(posString); 
+        posString.push_back('\0');       
+        HashPos(posString, id);
     }
     else {
-        string temp_string;
-        for(int i = 1; i < positions_string.size(); i++){
-            if (positions_string[i] != ',' and positions_string[i] != '"') {
-                temp_string.push_back(positions_string[i]);
+        string temp;
+        for(int i = 1; i < posString.size(); i++){
+            if (posString[i] != ',' and posString[i] != '"') {
+                temp.push_back(posString[i]);
             }
             else {
-                
-                temp_string.push_back('\0');
-                Hash(temp_string, real_ID);
-                player_positions[id].push_back(temp_string);
-                temp_string.clear();
+                temp.push_back('\0');
+                HashPos(temp, id);
+                positions.push_back(temp);
+                temp.clear();
                 i++;
             }
         }
     }
-
-
+    return positions;
 }
 
 // cria novo nodo trie
@@ -171,7 +186,7 @@ Trie_node *new_node(char letter) {
     
     Trie_node *new_node = (Trie_node*) malloc(sizeof(Trie_node));
 
-    new_node->letter = letter;
+    new_node->letter = toupper(letter);
     new_node->sofifa_id = -1;
     new_node->left = nullptr;
     new_node->middle = nullptr;
@@ -181,73 +196,44 @@ Trie_node *new_node(char letter) {
 }
 
 // insere nova string na arvore trie
-void trie_insert(Trie_node **node, const char *key, int id) {
+void trieInsert(Trie_node **node, const char *key, int id) {
 
     if (*node == nullptr) *node = new_node(*key);
 
-    if ((*key) < (*node)->letter) trie_insert(&((*node)->left), key, id);
+    if (toupper((*key)) < (*node)->letter) trieInsert(&((*node)->left), key, id);
 
-    else if ((*key) > (*node)->letter) trie_insert(&((*node)->right), key, id);
+    else if (toupper((*key)) > (*node)->letter) trieInsert(&((*node)->right), key, id);
 
-    else if (*(key + 1)) trie_insert(&((*node)->middle), key + 1, id);
+    else if (*(key + 1)) trieInsert(&((*node)->middle), key + 1, id);
 
     else (*node)->sofifa_id = id;
 
 }
 
-void read_cmd(string cmd) {
-
-  
+void query(string cmd, string arg) {
+    
+    vector<int> batata = create_tag_list("Argentina");
+    for (int i = 0; i < batata.size(); i++) cout << playersList[PlayerID[batata[i]]].name << endl;
+    
     // player <name or prefix>
-    if (cmd.compare(0, 6, "player ")) {
-        string teste;
-        cin >> teste;        
-        top_position_search(10, teste);
-        // cout << "rola" << endl;
-        // getchar();
-        //player_search(players_trie_root, cmd.substr(7));
+    if (cmd == "player") {
+        for (auto & c: arg) c = toupper(c);
+        playerSearch(playersTrie, arg);
     }
-
     // user <userID>
-    else if (!cmd.compare(0, 4, "user ")) {
-        // cout << "pinto" << endl;
-        // getchar();
-        user_ratings_search(stoi(cmd.substr(5)));
+    else if (cmd == "user") {
+        userRatingsSearch(stoi(arg));
     }
-
-    /*// top<N> ‘<position>’
-    else if (cmd.compare(0, 2, "top")) {
-       
-        int N;
-        string position;
-
-        for (int i = 3; i < cmd.size(); i++) {
-            if (cmd[i] != ' ' and cmd[i] != '\'') {
-                position.push_back(cmd[i]);
-            }
-            else if (cmd[i] == ' ') {
-                N = stoi(position);
-                position.clear();
-            }
-        }
-        //top_position_search(N, position);
+    // top<N> ‘<position>’
+    else if (cmd.substr(0, 3) == "top") {   
+        string n;
+        for (int i = 3; cmd[i] != ' '; i++) n.push_back(cmd[i]);
+        topPositionSearch(stoi(n), arg);
     }
-
     // tags <list of tags>
-    else if (cmd.compare(0, 4, "tags ")) {
-                
-        for (int i = 5; i < cmd.size(); i++) {
-            if (cmd[i] != ' ' and cmd[i] != '\'') {
-                position.push_back(cmd[i]);
-            }
-            else if (cmd[i] == ' ') {
-                N = stoi(position);
-                position.clear();
-            }
-        }
-        //tag_players_search();
+    /*else if (cmd == "tags") {
+        tagPlayersSearch(arg);
     }*/
-
     // comando invalido
     else cout << "Comando invalido\n";
 }
@@ -262,7 +248,7 @@ void traverse(Trie_node *root, vector<int> *fifa_ids){
 }
 
 // -> FUNCOES PRINCIPAIS DE CONSULTAS DE DADOS
-vector<int> trie_search(Trie_node *root, string query) {
+vector<int> trieSearch(Trie_node *root, string query) {
 
     vector<int> fifa_ids;
 
@@ -291,42 +277,39 @@ vector<int> trie_search(Trie_node *root, string query) {
     return fifa_ids;
 }
 
-void player_search(Trie_node *root, string player_name) {
+void playerSearch(Trie_node *root, string name) {
 
-    vector<int> ids = trie_search(root, player_name);
+    vector<int> ids = trieSearch(root, name);
 
     cout << "\nSOFIFA_ID  |  NAME\t\t\t\t |  POSITIONS  |   RATING   |  COUNT\n";
     cout << "---------------------------------------------------------------------------------------\n";
 
     for (int i = 0; i < ids.size(); i++) {
         printf("%6d        ", ids[i]); 
-        int id = playerID_translator[ids[i]];
-        printf("%-36s ", player_names[id].c_str()); 
+        int id = PlayerID[ids[i]];
+        printf("%-36s ", playersList[id].name.c_str());
         int j;
-        for (j = 0; j < player_positions[id].size(); j++) {
-            printf("%-s ", player_positions[id][j].c_str());
+        for (j = 0; j < playersList[id].pos.size(); j++) {
+            printf("%-s ", playersList[id].pos[j].c_str());
         }
         for (; j < 3; j++) cout << "   ";
-        float avg_rating = sum_rating[id]/total_rating[id];
+        float avg_rating = playersList[id].sum/playersList[id].count;
         if(!isnan(avg_rating)) printf("\t   %.5f\t", avg_rating);
         else printf("\t      -\t\t"); 
-        printf(" %-6d\n", total_rating[id]); 
-
+        printf(" %-6d\n", playersList[id].count); 
     }
-
 }
 
-void top_position_search(int N, string position){  
-    
+void topPositionSearch(int N, string pos){  
 
     vector<int> ids;
     
-    position.push_back('\0'); 
-    int key = HornerHash(position);
+    pos.push_back('\0'); 
+    int key = HornerHash(pos, 17);
     
 
     for(int i = 0;i < Pos_players[key].size(); i++){
-        if(!strcmp(Pos_players[key][i].first.c_str(), position.c_str()))
+        if(!strcmp(Pos_players[key][i].first.c_str(), pos.c_str()))
             ids.push_back(Pos_players[key][i].second);
     }
 
@@ -337,55 +320,66 @@ void top_position_search(int N, string position){
 
     for (int i = 0; i < N; i++) {
         printf("%6d        ", ids[i]); 
-        int id = playerID_translator[ids[i]];
-        printf("%-36s ", player_names[id].c_str()); 
+        int id = PlayerID[ids[i]];
+        printf("%-36s ", playersList[id].name.c_str()); 
         int j;
-        for (j = 0; j < player_positions[id].size(); j++) {
-            printf("%-s ", player_positions[id][j].c_str());
+        for (j = 0; j < playersList[id].pos.size(); j++) {
+            printf("%-s ", playersList[id].pos[j].c_str());
         }
         for (; j < 3; j++) cout << "   ";
-        float avg_rating = sum_rating[id]/total_rating[id];
+        float avg_rating = playersList[id].sum/playersList[id].count;
         if(!isnan(avg_rating)) printf("\t   %.5f\t", avg_rating);
         else printf("\t      -\t\t"); 
-        printf(" %-6d\n", total_rating[id]); 
+        printf(" %-6d\n", playersList[id].count); 
 
     }
 
 }
 
-void user_ratings_search(int user_id){
+void userRatingsSearch(int userId){
     
-    user_id = userID_translator[user_id];
+    userId = UserID[userId];
     // sort de ratings do jogador ()
 
     cout << "\nSOFIFA_ID  |  NAME\t\t\t\t |   GLOBAL    |   COUNT    |  RATING\n";
     cout << "---------------------------------------------------------------------------------------\n";
 
-    for (int i = 0; i < min(20, (int)user_ratings[user_id].size()); i++) {
-        //cout << user_ratings[user_id].size();
-        printf("%6d        ", user_ratings[user_id][i].first); 
-        int player_id = playerID_translator[user_ratings[user_id][i].first];
-        printf("%-36s ", player_names[player_id].c_str()); 
-        float avg_rating = sum_rating[player_id]/total_rating[player_id];
+    for (int i = 0; i < min(20, (int)ratingsByUser[userId].size()); i++) {
+        printf("%6d        ", ratingsByUser[userId][i].first); 
+        int player_id = PlayerID[ratingsByUser[userId][i].first];
+        printf("%-36s ", playersList[player_id].name.c_str()); 
+        float avg_rating = playersList[player_id].sum/playersList[player_id].count;
         if(!isnan(avg_rating)) printf("  %.5f\t", avg_rating);
         else printf("\t      -\t\t"); 
-        printf("     %-6d", total_rating[player_id]); 
-        printf("\t%0.1f\n", user_ratings[user_id][i].second);
+        printf("     %-6d", playersList[player_id].count); 
+        printf("\t%0.1f\n", ratingsByUser[userId][i].second);
     }
 }
 
-int HornerHash(string s){
+void tags(){
+    
+}
+
+void HashPos(string s, int id){
+    int key = HornerHash(s, 17);
+    pair<string, int> id_pos = {s, id};
+    Pos_players[key].push_back(id_pos);
+}
+
+void HashTag(string s, int id){
+    int key = HornerHash(s, 1000);
+    pair<string, int> id_tag = {s, id};
+    Tag_players[key].push_back(id_tag);
+}
+
+int HornerHash(string s, int N){
 
     int hash = 0;
 
     for(int i = 0; i < s.length(); i++)
-        hash = (31 * hash + s.at(i)) % 17;
+        hash = (31 * hash + s.at(i)) % N;
 
     return hash;
 }
 
-void Hash(string s, int ID){
-    int key = HornerHash(s);
-    pair<string, int> id_pos = {s, ID};
-    Pos_players[key].push_back(id_pos);
-}
+
