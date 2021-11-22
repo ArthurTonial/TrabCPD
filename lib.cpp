@@ -212,8 +212,8 @@ void trieInsert(Trie_node **node, const char *key, int id) {
 
 void query(string cmd, string arg) {
     
-    vector<int> batata = create_tag_list("Argentina");
-    for (int i = 0; i < batata.size(); i++) cout << playersList[PlayerID[batata[i]]].name << endl;
+    // vector<int> batata = create_tag_list("Argentina");
+    // for (int i = 0; i < batata.size(); i++) cout << playersList[PlayerID[batata[i]]].name << endl;
     
     // player <name or prefix>
     if (cmd == "player") {
@@ -228,7 +228,12 @@ void query(string cmd, string arg) {
     else if (cmd.substr(0, 3) == "top") {   
         string n;
         for (int i = 3; cmd[i] != ' '; i++) n.push_back(cmd[i]);
-        topPositionSearch(stoi(n), arg);
+        for (auto & c: arg) c = toupper(c);
+        arg.push_back('\0');
+        if(Pos_players[HornerHash(arg, 17)].size())
+            topPositionSearch(stoi(n), arg);
+        else 
+            cout << "invalid position";
     }
     // tags <list of tags>
     /*else if (cmd == "tags") {
@@ -303,8 +308,7 @@ void playerSearch(Trie_node *root, string name) {
 void topPositionSearch(int N, string pos){  
 
     vector<int> ids;
-    
-    pos.push_back('\0'); 
+
     int key = HornerHash(pos, 17);
     
 
@@ -312,13 +316,16 @@ void topPositionSearch(int N, string pos){
         if(!strcmp(Pos_players[key][i].first.c_str(), pos.c_str()))
             ids.push_back(Pos_players[key][i].second);
     }
-
+    
     //sort ids
-
+    if(!ids.size()){
+        cout << "invalid position!";
+        return;
+    }
     cout << "\nSOFIFA_ID  |  NAME\t\t\t\t |  POSITIONS  |   RATING   |  COUNT\n";
     cout << "---------------------------------------------------------------------------------------\n";
 
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N && i < ids.size(); i++) {
         printf("%6d        ", ids[i]); 
         int id = PlayerID[ids[i]];
         printf("%-36s ", playersList[id].name.c_str()); 
