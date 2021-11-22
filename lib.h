@@ -13,9 +13,9 @@
 #define NAME_MAX 255
 #define BUFFER_MAX 511
 #define PLAYERS_ID_MAX 260000
-#define USERS_ID_MAX 140000
+#define USERS_ID_MAX 300000
 #define PLAYER_MAX 18946
-#define USER_MAX 10002
+#define USER_MAX 200000
 
 using namespace std;
 
@@ -47,5 +47,8 @@ void print();
 
 void player_search(Trie_node *root, string player_name);
 void user_ratings_search(int user_id);
+void top_position_search(int N, string position);
+void Hash(string s, int ID);
+int HornerHash(string s);
 
 #endif //TRABCPD_LIB_H
