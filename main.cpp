@@ -4,8 +4,14 @@ using namespace std;
 
 int main() {
 
+    auto start = chrono::high_resolution_clock::now();
+    bool failed = readPlayers() or readRating() or readTags();
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::seconds>(stop - start);
+    cout << "\nTempo de processamento:" << duration.count() << "s\n";
+
     // abre arquivos
-    if (!readPlayers() and !readRating() and !readTags()) {
+    if (!failed) {
 
         // interacoes de buscas
         string cmd, arg;

@@ -218,6 +218,8 @@ void hashTag(string s, int id){
 
 // funcao para decodificar e encaminhar input do usuario
 void query(string cmd, string arg) {   
+    // remove inputs vazios
+    if (arg == "") return;
     // player <name or prefix>
     if (cmd == "player") {
         for (auto & c: arg) c = toupper(c);
@@ -362,6 +364,7 @@ void topPositionSearch(int N, string pos){
 
 // funcao para query de busca  a partir de lista de tags
 void tagPlayersSearch(vector<string> tags) {
+    if (!tags.size()) return;
     vector<int> intersect = createTagList(tags[0]);
 
     //interseccionar vetores
