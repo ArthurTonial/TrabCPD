@@ -25,7 +25,6 @@ struct Player{
     vector<string> pos;
     double sum;
     int count;
-    double rat = sum/count;
 };
 
 //estrutura de dados para arvore trie
@@ -61,10 +60,16 @@ void playerSearch(Trie_node *root, string name);
 void userRatingsSearch(int userId);
 void topPositionSearch(int N, string pos);
 void tagPlayersSearch(vector<string> tags);
+vector<int> intersection(vector<int> va, vector<int> vb);
 void hashPos(string s, int ID);
 void hashTag(string s, int ID);
 int hornerHash(string s, int N);
-vector<int> create_tag_list(string tag);
+vector<int> createTagList(string tag);
 vector<string> prepareTags(string tags);
+// algoritmo de sort
+int lomutoRating(vector<pair<int,double>> &v, int left, int right);
+void quicksortRating(vector<pair<int,double>> &v, int left, int right);
+int lomuto(vector<int> &v, int left, int right);
+void quicksort(vector<int> &v, int left, int right);
 
 #endif //TRABCPD_LIB_H

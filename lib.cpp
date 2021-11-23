@@ -62,7 +62,7 @@ int readPlayers() {
 // funcao para ler arquivo de ratings
 int readRating() {
     // abre arquivo de leitura
-    ifstream csv("dados/minirating.csv");
+    ifstream csv("dados/rating.csv");
 
     if (!csv.is_open()) {
         cout << "> erro ao abrir rating.csv\n";
@@ -227,11 +227,11 @@ void query(string cmd, string arg) {
     }
     // top<N> ‘<position>’
     else if (cmd.substr(0, 3) == "top") {   
-        string n;
+        string n, arg2 = arg.substr(1, arg.size()-2); 
         for (int i = 3; cmd[i] != ' '; i++) n.push_back(cmd[i]);
-        for (auto & c: arg) c = toupper(c);
+        for (auto & c: arg2) c = toupper(c);
         arg.push_back('\0');
-        if (Pos_players[hornerHash(arg, 17)].size()) topPositionSearch(stoi(n), arg);
+        if (Pos_players[hornerHash(arg2, 17)].size()) topPositionSearch(stoi(n), arg2);
         else cout << "Posicao invalida";
     }
     // tags <list of tags>
@@ -250,7 +250,7 @@ void playerSearch(Trie_node *root, string name) {
     cout << "---------------------------------------------------------------------------------------\n";
     for (int i = 0; i < ids.size(); i++) {
         int id = PlayerID[ids[i]], j;
-        printf("%15d", ids[i]); 
+        printf("%-9d      ", ids[i]); 
         printf("%-37s", playersList[id].name.c_str());
         for (j = 0; j < playersList[id].pos.size(); j++) printf("%-s ", playersList[id].pos[j].c_str());
         for (; j < 3; j++) cout << "   ";
@@ -299,6 +299,8 @@ void traverse(Trie_node *root, vector<int> *fifa_ids) {
 void userRatingsSearch(int userId){
     userId = UserID[userId];
     // sort de ratings do jogador ()
+    
+    quicksortRating(ratingsByUser[userId], 0, ratingsByUser[userId].size()-1);
 
     cout << "\nSOFIFA_ID  |  NAME\t\t\t\t |   GLOBAL    |   COUNT    |  RATING\n";
     cout << "---------------------------------------------------------------------------------------\n";
@@ -316,27 +318,35 @@ void userRatingsSearch(int userId){
 
 // funcao para query de busca de N jogadores a partir de posicao
 void topPositionSearch(int N, string pos){  
-    vector<int> ids;
+    vector<pair<int, double>> ids;
     
-    //pos.push_back('\0'); 
+    pos.push_back('\0');
     int key = hornerHash(pos, 17);
 
     for(int i = 0;i < Pos_players[key].size(); i++){
-        if(!strcmp(Pos_players[key][i].first.c_str(), pos.c_str()))
-            ids.push_back(Pos_players[key][i].second);
+        if(!strcmp(Pos_players[key][i].first.c_str(), pos.c_str())){
+            int player_fifaid = Pos_players[key][i].second;
+            double id_rating = playersList[PlayerID[player_fifaid]].sum/playersList[PlayerID[player_fifaid]].count;
+            ids.push_back({player_fifaid, id_rating});
+        }
     }
-    
+
+
     //sort ids
     if(!ids.size()){
         cout << "invalid position!";
         return;
     }
+
+    
+    quicksortRating(ids, 0, ids.size()-1);
+
     cout << "\nSOFIFA_ID  |  NAME\t\t\t\t |  POSITIONS  |   RATING   |  COUNT\n";
     cout << "---------------------------------------------------------------------------------------\n";
 
     for (int i = 0; i < N && i < ids.size(); i++) {
-        printf("%6d        ", ids[i]); 
-        int id = PlayerID[ids[i]];
+        printf("%6d        ", ids[i].first); 
+        int id = PlayerID[ids[i].first];
         printf("%-36s ", playersList[id].name.c_str()); 
         int j;
         for (j = 0; j < playersList[id].pos.size(); j++) {
@@ -352,56 +362,132 @@ void topPositionSearch(int N, string pos){
 
 // funcao para query de busca  a partir de lista de tags
 void tagPlayersSearch(vector<string> tags) {
-    if(tags.size() == 1){
-        //IMPRIMIR A UNICA QUE TEM
-        return;
+    vector<int> intersect = createTagList(tags[0]);
+
+    for(int i = 1; i < tags.size(); i++) {
+        intersect = intersection(intersect, createTagList(tags[i]));
     }
 
-    vector<int> intersect;
-    for(int i = 0; i < tags.size()-1; i++){
-        vector<int> v1 = create_tag_list(tags[i]);
-        vector<int> v2 = create_tag_list(tags[i+1]);
-        set_intersection(v1.begin(), v1.end(),
-                         v2.begin(), v2.end(),
-                        std::back_inserter(intersect));
+    cout << "\nSOFIFA_ID  |  NAME\t\t\t\t |  POSITIONS  |   RATING   |  COUNT\n";
+    cout << "---------------------------------------------------------------------------------------\n";
+    for (int i = 0; i < intersect.size(); i++) {
+        printf("%6d        ", intersect[i]); 
+        int id = PlayerID[intersect[i]];
+        printf("%-36s ", playersList[id].name.c_str()); 
+        int j;
+        for (j = 0; j < playersList[id].pos.size(); j++) {
+            printf("%-s ", playersList[id].pos[j].c_str());
+        }
+        for (; j < 3; j++) cout << "   ";
+        float avg = playersList[id].sum/playersList[id].count;
+        if(!isnan(avg)) printf("\t   %.5f\t", avg);
+        else printf("\t      -\t\t"); 
+        printf(" %-6d\n", playersList[id].count); 
     }
 }
 
+vector<int> intersection(vector<int> va, vector<int> vb) {
+    vector<int> inter;
+    sort(va.begin(), va.end());
+    sort(vb.begin(), vb.end());
+    set_intersection(va.begin(), va.end(), vb.begin(), vb.end(), back_inserter(inter));
+    return inter;
+}
+
 // 
-vector<int> create_tag_list(string tag){
-    vector<int> players_with_tag;
+vector<int> createTagList(string tag){
+    vector<int> tagsPlayers;
     tag.push_back('\0');
     int key = hornerHash(tag, 1000);
 
     for(int i = 0; i < Tag_players[key].size(); i++){
-        int sofifa_id = Tag_players[key][i].second;
-        int player_id = PlayerID[sofifa_id];
+        int playerId = PlayerID[Tag_players[key][i].second];
 
-
-        if(Tag_players[key][i].first == tag /*&& playersList[player_id].count > 0*/) {
-            players_with_tag.push_back(playersList[player_id].id);
+        if(Tag_players[key][i].first == tag /*&& playersList[playerId].count > 0*/) {
+            tagsPlayers.push_back(playersList[playerId].id);
         }
     }
+    
     vector<int>::iterator ip;
-    ip = unique(players_with_tag.begin(), players_with_tag.begin() + players_with_tag.size());
-    players_with_tag.resize(distance(players_with_tag.begin(), ip));
-    sort(players_with_tag.begin(), players_with_tag.end()); //TEMOS QUE IMPLEMENTAR O SORT
+    ip = unique(tagsPlayers.begin(), tagsPlayers.begin() + tagsPlayers.size());
+    tagsPlayers.resize(distance(tagsPlayers.begin(), ip));
+    quicksort(tagsPlayers, 0, tagsPlayers.size()-1);
 
-    return players_with_tag;
+    return tagsPlayers;
 }
 
+// funcao para preparar lista de tags
 vector<string> prepareTags(string tags) {
     vector<string> tagsVector;
     string aux;
 
     for (int i = 0; i < tags.size(); i++) {
         if (tags[i] == '\'') {
-
+            if (aux.size()) {
+                tagsVector.push_back(aux);
+                aux.clear();
+                i++;
+            }
         }
         else {
-
+            aux.push_back(tags[i]);
         }
     }
-
     return tagsVector;
+}
+
+// funcao de sort
+void quicksort(vector<int> &v, int left, int right) {
+    if(left < right) {
+        int pivot = lomuto(v, left, right);
+        quicksort(v, left, pivot - 1);
+        quicksort(v, pivot, right);
+    }
+}
+
+int lomuto(vector<int> &v, int left, int right)
+{
+    int pivot = v[right];    // pivot
+    int i = (left - 1);  // Index of smaller element
+ 
+    for (int j = left; j <= right - 1; j++)
+    {
+        // If current element is smaller than or
+        // equal to pivot
+        if (v[j] <= pivot)
+        {
+            i++;    // increment index of smaller element
+            swap(v[i], v[j]);
+        }
+    }
+    swap(v[i + 1], v[right]);
+    return (i + 1);
+}
+
+// funcao de sort
+void quicksortRating(vector<pair<int,double>> &v, int left, int right) {
+    if(left < right) {
+        double pivot = lomutoRating(v, left, right);
+        quicksortRating(v, left, pivot - 1);
+        quicksortRating(v, pivot + 1, right);
+    }
+}
+
+int lomutoRating(vector<pair<int,double>> &v, int left, int right)
+{
+    double pivot = v[right].second;    // pivot
+    int i = (left - 1);  // Index of smaller element
+ 
+    for (int j = left; j <= right - 1; j++)
+    {
+        // If current element is smaller than or
+        // equal to pivot
+        if (v[j].second > pivot)
+        {
+            i++;    // increment index of smaller element
+            swap(v[i], v[j]);
+        }
+    }
+    swap(v[i + 1], v[right]);
+    return (i + 1);
 }

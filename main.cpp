@@ -8,15 +8,13 @@ int main() {
 
         string cmd, arg;
         do {
-            cout << "\nDigite o comando desejado [ou 0 para sair]:";
+            cout << "\nDigite o comando desejado [ou \"encerrar programa\" para sair]:";
             cout << "\n$ ";
-            
+
             getline(cin, cmd, ' ');
             getline(cin, arg);
-
-            query(cmd, arg);
-
-        } while(cmd.compare("0"));
+            if (cmd != "encerrar")  query(cmd, arg);
+        } while(cmd != "encerrar");
     }
     cout << "\nObrigado e volte sempre! ^^\n";
 
