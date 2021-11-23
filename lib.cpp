@@ -2,9 +2,12 @@
 
 using namespace std;
 
+///////////////////////////////////////////////////////////////////
+//                        FASE0: GLOBAIS                         //
+///////////////////////////////////////////////////////////////////
+
 // arvores trie de nomes e tags
 Trie_node *playersTrie;
-
 // arrays de acesso rapido a partir de IDs
 int PlayerID[ID_MAX];
 int UserID[ID_MAX];
@@ -183,34 +186,32 @@ void trieInsert(Trie_node **node, const char *key, int id) {
 }
 
 // funcao para
+int hornerHash(string s, int N){
+    int hash = 0;
+    for(int i = 0; i < s.length(); i++){
+        hash = (31 * hash + s.at(i)) % N;
+    }
+    return hash;
+}
+
+// funcao para
 void hashPos(string s, int id){
     int key = hornerHash(s, 17);
     pair<string, int> id_pos = {s, id};
     Pos_players[key].push_back(id_pos);
 }
 
-// fuincao para
+// funcao para
 void hashTag(string s, int id){
     int key = hornerHash(s, 1000);
     pair<string, int> id_tag = {s, id};
     Tag_players[key].push_back(id_tag);
 }
 
-// fauncao para
-int hornerHash(string s, int N){
-    int hash = 0;
-
-    for(int i = 0; i < s.length(); i++)
-        hash = (31 * hash + s.at(i)) % N;
-
-    return hash;
-}
 
 ///////////////////////////////////////////////////////////////////
 //                       FASE2: CONSULTAS                        //
 ///////////////////////////////////////////////////////////////////
-
-
 
 // funcao para decodificar e encaminhar input do usuario
 void query(string cmd, string arg) {   
@@ -237,22 +238,30 @@ void query(string cmd, string arg) {
     else cout << "Comando invalido\n";
 }
 
-void traverse(Trie_node *root, vector<int> *fifa_ids){
-    if(root){
-        if(root->sofifa_id != -1) (*fifa_ids).push_back(root->sofifa_id);
-        traverse(root->left, fifa_ids);
-        traverse(root->right, fifa_ids);
-        traverse(root->middle, fifa_ids);
+// funcao para query de busca a partir de nome ou prefixo
+void playerSearch(Trie_node *root, string name) {
+    vector<int> ids = trieSearch(root, name);
+
+    cout << "\nSOFIFA_ID  |  NAME\t\t\t\t |  POSITIONS  |   RATING   |  COUNT\n";
+    cout << "---------------------------------------------------------------------------------------\n";
+    for (int i = 0; i < ids.size(); i++) {
+        int id = PlayerID[ids[i]], j;
+        printf("%15d", ids[i]); 
+        printf("%-37s", playersList[id].name.c_str());
+        for (j = 0; j < playersList[id].pos.size(); j++) printf("%-s ", playersList[id].pos[j].c_str());
+        for (; j < 3; j++) cout << "   ";
+        float avg = playersList[id].sum/playersList[id].count;
+        if(!isnan(avg)) printf("\t   %.5f\t", avg);
+        else printf("\t      -\t\t"); 
+        printf(" %-6d\n", playersList[id].count); 
     }
 }
 
-// -> FUNCOES PRINCIPAIS DE CONSULTAS DE DADOS
+// funcao para retornar lista de ids alcancaveis a partir de string
 vector<int> trieSearch(Trie_node *root, string query) {
-
-    vector<int> fifa_ids;
-
-    if (!root) return fifa_ids;
-    
+    vector<int> ids;
+    if (!root) return ids;
+    // navega ate terminar string
     int i = 0;
     while(i < query.size()){
         if(root){
@@ -262,50 +271,51 @@ vector<int> trieSearch(Trie_node *root, string query) {
             else i++;
         }
         else {
-           cout << "no matching result. :(";
-           return fifa_ids;
+           cout << "Nenhum resultado compativel. :(";
+           return ids;
         }   
     }
-    
-    if(root->sofifa_id != -1) fifa_ids.push_back(root->sofifa_id);
-
-    traverse(root->left, &fifa_ids);
-    traverse(root->right, &fifa_ids);
-    traverse(root->middle, &fifa_ids);
-
-    return fifa_ids;
+    // explora resto da arvore
+    if(root->sofifa_id != -1) ids.push_back(root->sofifa_id);
+    traverse(root, &ids);
+    return ids;
 }
 
-void playerSearch(Trie_node *root, string name) {
-
-    vector<int> ids = trieSearch(root, name);
-
-    cout << "\nSOFIFA_ID  |  NAME\t\t\t\t |  POSITIONS  |   RATING   |  COUNT\n";
-    cout << "---------------------------------------------------------------------------------------\n";
-
-    for (int i = 0; i < ids.size(); i++) {
-        printf("%6d        ", ids[i]); 
-        int id = PlayerID[ids[i]];
-        printf("%-36s ", playersList[id].name.c_str());
-        int j;
-        for (j = 0; j < playersList[id].pos.size(); j++) {
-            printf("%-s ", playersList[id].pos[j].c_str());
-        }
-        for (; j < 3; j++) cout << "   ";
-        float avg_rating = playersList[id].sum/playersList[id].count;
-        if(!isnan(avg_rating)) printf("\t   %.5f\t", avg_rating);
-        else printf("\t      -\t\t"); 
-        printf(" %-6d\n", playersList[id].count); 
+// funcao para explorar toda arvore a partir de raiz
+void traverse(Trie_node *root, vector<int> *fifa_ids){
+    if(root){
+        if(root->sofifa_id != -1) (*fifa_ids).push_back(root->sofifa_id);
+        traverse(root->left, fifa_ids);
+        traverse(root->right, fifa_ids);
+        traverse(root->middle, fifa_ids);
     }
 }
 
-void topPositionSearch(int N, string pos){  
+// funcao para query de busca a partir de id de jogador
+void userRatingsSearch(int userId){
+    userId = UserID[userId];
+    // sort de ratings do jogador ()
 
+    cout << "\nSOFIFA_ID  |  NAME\t\t\t\t |   GLOBAL    |   COUNT    |  RATING\n";
+    cout << "---------------------------------------------------------------------------------------\n";
+    for (int i = 0; i < min(20, (int)ratingsByUser[userId].size()); i++) {
+        printf("%6d        ", ratingsByUser[userId][i].first); 
+        int player_id = PlayerID[ratingsByUser[userId][i].first];
+        printf("%-36s ", playersList[player_id].name.c_str()); 
+        float avg_rating = playersList[player_id].sum/playersList[player_id].count;
+        if(!isnan(avg_rating)) printf("  %.5f\t", avg_rating);
+        else printf("\t      -\t\t"); 
+        printf("     %-6d", playersList[player_id].count); 
+        printf("\t%0.1f\n", ratingsByUser[userId][i].second);
+    }
+}
+
+// funcao para query de busca de N jogadores a partir de posicao
+void topPositionSearch(int N, string pos){  
     vector<int> ids;
     
     pos.push_back('\0'); 
     int key = hornerHash(pos, 17);
-    
 
     for(int i = 0;i < Pos_players[key].size(); i++){
         if(!strcmp(Pos_players[key][i].first.c_str(), pos.c_str()))
@@ -316,7 +326,6 @@ void topPositionSearch(int N, string pos){
 
     cout << "\nSOFIFA_ID  |  NAME\t\t\t\t |  POSITIONS  |   RATING   |  COUNT\n";
     cout << "---------------------------------------------------------------------------------------\n";
-
     for (int i = 0; i < N; i++) {
         printf("%6d        ", ids[i]); 
         int id = PlayerID[ids[i]];
@@ -330,15 +339,15 @@ void topPositionSearch(int N, string pos){
         if(!isnan(avg_rating)) printf("\t   %.5f\t", avg_rating);
         else printf("\t      -\t\t"); 
         printf(" %-6d\n", playersList[id].count); 
-
     }
-
 }
 
+// funcao para query de busca  a partir de lista de tags
 void tagPlayersSearch(vector<string> tags) {
 
 }
 
+// 
 vector<int> create_tag_list(string tag){
     vector<int> players_with_tag;
     tag.push_back('\0');
@@ -353,27 +362,3 @@ vector<int> create_tag_list(string tag){
     }
     return players_with_tag;
 }
-
-void userRatingsSearch(int userId){
-    
-    userId = UserID[userId];
-    // sort de ratings do jogador ()
-
-    cout << "\nSOFIFA_ID  |  NAME\t\t\t\t |   GLOBAL    |   COUNT    |  RATING\n";
-    cout << "---------------------------------------------------------------------------------------\n";
-
-    for (int i = 0; i < min(20, (int)ratingsByUser[userId].size()); i++) {
-        printf("%6d        ", ratingsByUser[userId][i].first); 
-        int player_id = PlayerID[ratingsByUser[userId][i].first];
-        printf("%-36s ", playersList[player_id].name.c_str()); 
-        float avg_rating = playersList[player_id].sum/playersList[player_id].count;
-        if(!isnan(avg_rating)) printf("  %.5f\t", avg_rating);
-        else printf("\t      -\t\t"); 
-        printf("     %-6d", playersList[player_id].count); 
-        printf("\t%0.1f\n", ratingsByUser[userId][i].second);
-    }
-}
-
-
-
-
