@@ -457,7 +457,6 @@ int lomuto(vector<int> &v, int left, int right)
  
     for (int j = left; j <= right - 1; j++)
     {
-        
         if (v[j] <= pivot)
         {
             i++;    
@@ -484,8 +483,7 @@ int lomutoRating(vector<pair<int,double>> &v, int left, int right)
     int i = (left - 1);  
  
     for (int j = left; j <= right - 1; j++)
-    {
-        
+    { 
         if (v[j].second > pivot)
         {
             i++;   
