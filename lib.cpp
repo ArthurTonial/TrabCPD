@@ -231,14 +231,12 @@ void query(string cmd, string arg) {
         for (int i = 3; cmd[i] != ' '; i++) n.push_back(cmd[i]);
         for (auto & c: arg) c = toupper(c);
         arg.push_back('\0');
-        if(Pos_players[HornerHash(arg, 17)].size())
-            topPositionSearch(stoi(n), arg);
-        else 
-            cout << "invalid position";
+        if (Pos_players[hornerHash(arg, 17)].size()) topPositionSearch(stoi(n), arg);
+        else cout << "Posicao invalida";
     }
     // tags <list of tags>
     else if (cmd == "tags") {
-        tagPlayersSearch(arg);
+        tagPlayersSearch(prepareTags(arg));
     }
     // comando invalido
     else cout << "Comando invalido\n";
@@ -288,7 +286,7 @@ vector<int> trieSearch(Trie_node *root, string query) {
 }
 
 // funcao para explorar toda arvore a partir de raiz
-void traverse(Trie_node *root, vector<int> *fifa_ids){
+void traverse(Trie_node *root, vector<int> *fifa_ids) {
     if(root){
         if(root->sofifa_id != -1) (*fifa_ids).push_back(root->sofifa_id);
         traverse(root->left, fifa_ids);
@@ -354,14 +352,26 @@ void topPositionSearch(int N, string pos){
 
 // funcao para query de busca  a partir de lista de tags
 void tagPlayersSearch(vector<string> tags) {
+    if(tags.size() == 1){
+        //IMPRIMIR A UNICA QUE TEM
+        return;
+    }
 
+    vector<int> intersect;
+    for(int i = 0; i < tags.size()-1; i++){
+        vector<int> v1 = create_tag_list(tags[i]);
+        vector<int> v2 = create_tag_list(tags[i+1]);
+        set_intersection(v1.begin(), v1.end(),
+                         v2.begin(), v2.end(),
+                        std::back_inserter(intersect));
+    }
 }
 
 // 
 vector<int> create_tag_list(string tag){
     vector<int> players_with_tag;
     tag.push_back('\0');
-    int key = HornerHash(tag, 1000);
+    int key = hornerHash(tag, 1000);
 
     for(int i = 0; i < Tag_players[key].size(); i++){
         int sofifa_id = Tag_players[key][i].second;
@@ -378,4 +388,20 @@ vector<int> create_tag_list(string tag){
     sort(players_with_tag.begin(), players_with_tag.end()); //TEMOS QUE IMPLEMENTAR O SORT
 
     return players_with_tag;
+}
+
+vector<string> prepareTags(string tags) {
+    vector<string> tagsVector;
+    string aux;
+
+    for (int i = 0; i < tags.size(); i++) {
+        if (tags[i] == '\'') {
+
+        }
+        else {
+
+        }
+    }
+
+    return tagsVector;
 }

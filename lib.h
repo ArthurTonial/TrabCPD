@@ -51,6 +51,7 @@ vector<string> addPos(string pos, int id);
 Trie_node *new_node(char letter);
 void trieInsert(Trie_node **node, const char *key, int id);
 vector<int> trieSearch(Trie_node *root, string query);
+void traverse(Trie_node *root, vector<int> *fifa_ids);
 
 // funcao de menu
 void query(string cmd, string arg);
@@ -59,9 +60,11 @@ void print();
 void playerSearch(Trie_node *root, string name);
 void userRatingsSearch(int userId);
 void topPositionSearch(int N, string pos);
-void HashPos(string s, int ID);
-void HashTag(string s, int ID);
-int HornerHash(string s, int N);
+void tagPlayersSearch(vector<string> tags);
+void hashPos(string s, int ID);
+void hashTag(string s, int ID);
+int hornerHash(string s, int N);
 vector<int> create_tag_list(string tag);
+vector<string> prepareTags(string tags);
 
 #endif //TRABCPD_LIB_H
