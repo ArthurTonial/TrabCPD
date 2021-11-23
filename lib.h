@@ -42,30 +42,27 @@ Player createPlayer(int id, string name, string pos);
 int readPlayers();
 int readRating();
 int readTags();
-
-// faz hash entre id de jogador e suas posicoes
+// funcoes de hash
 vector<string> addPos(string pos, int id);
-
+void hashPos(string s, int ID);
+void hashTag(string s, int ID);
+int hornerHash(string s, int N);
 // funcoes de arvore trie
 Trie_node *new_node(char letter);
 void trieInsert(Trie_node **node, const char *key, int id);
-vector<int> trieSearch(Trie_node *root, string query);
-void traverse(Trie_node *root, vector<int> *fifa_ids);
-
 // funcao de menu
 void query(string cmd, string arg);
-void print();
-
+// funceos de busca
 void playerSearch(Trie_node *root, string name);
 void userRatingsSearch(int userId);
 void topPositionSearch(int N, string pos);
 void tagPlayersSearch(vector<string> tags);
+// funcoes auxiliares para busca
 vector<int> intersection(vector<int> va, vector<int> vb);
-void hashPos(string s, int ID);
-void hashTag(string s, int ID);
-int hornerHash(string s, int N);
 vector<int> createTagList(string tag);
 vector<string> prepareTags(string tags);
+vector<int> trieSearch(Trie_node *root, string query);
+void traverse(Trie_node *root, vector<int> *fifa_ids);
 // algoritmo de sort
 int lomutoRating(vector<pair<int,double>> &v, int left, int right);
 void quicksortRating(vector<pair<int,double>> &v, int left, int right);

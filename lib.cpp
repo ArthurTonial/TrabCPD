@@ -364,6 +364,7 @@ void topPositionSearch(int N, string pos){
 void tagPlayersSearch(vector<string> tags) {
     vector<int> intersect = createTagList(tags[0]);
 
+    //interseccionar vetores
     for(int i = 1; i < tags.size(); i++) {
         intersect = intersection(intersect, createTagList(tags[i]));
     }
@@ -401,6 +402,7 @@ vector<int> createTagList(string tag){
     tag.push_back('\0');
     int key = hornerHash(tag, 1000);
 
+    //cria vetor
     for(int i = 0; i < Tag_players[key].size(); i++){
         int playerId = PlayerID[Tag_players[key][i].second];
 
@@ -409,6 +411,7 @@ vector<int> createTagList(string tag){
         }
     }
     
+    //deleta repetiçoes e ordena
     vector<int>::iterator ip;
     ip = unique(tagsPlayers.begin(), tagsPlayers.begin() + tagsPlayers.size());
     tagsPlayers.resize(distance(tagsPlayers.begin(), ip));
