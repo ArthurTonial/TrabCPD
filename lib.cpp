@@ -132,6 +132,7 @@ int readTags() {
 			HashTag(aux, sofifa_id);
         }
         csv.close();
+
         return 0;
     }
 }
@@ -144,10 +145,17 @@ vector<int> create_tag_list(string tag){
     for(int i = 0; i < Tag_players[key].size(); i++){
         int sofifa_id = Tag_players[key][i].second;
         int player_id = PlayerID[sofifa_id];
-        if(Tag_players[key][i].first == tag && playersList[player_id].count > 2) {
+
+
+        if(Tag_players[key][i].first == tag /*&& playersList[player_id].count > 0*/) {
             players_with_tag.push_back(playersList[player_id].id);
         }
     }
+    vector<int>::iterator ip;
+    ip = unique(players_with_tag.begin(), players_with_tag.begin() + players_with_tag.size());
+    players_with_tag.resize(distance(players_with_tag.begin(), ip));
+    sort(players_with_tag.begin(), players_with_tag.end()); //TEMOS QUE IMPLEMENTAR O SORT
+
     return players_with_tag;
 }
 
@@ -212,8 +220,13 @@ void trieInsert(Trie_node **node, const char *key, int id) {
 
 void query(string cmd, string arg) {
     
-    // vector<int> batata = create_tag_list("Argentina");
-    // for (int i = 0; i < batata.size(); i++) cout << playersList[PlayerID[batata[i]]].name << endl;
+    vector<int> v1 = create_tag_list("Joao Comba");
+    vector<int> v2 = create_tag_list("Dribbler");
+    vector<int> v_intersection = v1;
+    // std::set_intersection(v1.begin(), v1.end(),
+    //                       v2.begin(), v2.end(),
+    //                       std::back_inserter(v_intersection));
+    for (int i = 0; i < v_intersection.size(); i++) cout << playersList[PlayerID[v_intersection[i]]].name << endl;
     
     // player <name or prefix>
     if (cmd == "player") {
