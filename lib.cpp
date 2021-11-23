@@ -130,28 +130,6 @@ int readTags() {
     }
 }
 
-vector<int> create_tag_list(string tag){
-    vector<int> players_with_tag;
-    tag.push_back('\0');
-    int key = HornerHash(tag, 1000);
-
-    for(int i = 0; i < Tag_players[key].size(); i++){
-        int sofifa_id = Tag_players[key][i].second;
-        int player_id = PlayerID[sofifa_id];
-
-
-        if(Tag_players[key][i].first == tag /*&& playersList[player_id].count > 0*/) {
-            players_with_tag.push_back(playersList[player_id].id);
-        }
-    }
-    vector<int>::iterator ip;
-    ip = unique(players_with_tag.begin(), players_with_tag.begin() + players_with_tag.size());
-    players_with_tag.resize(distance(players_with_tag.begin(), ip));
-    sort(players_with_tag.begin(), players_with_tag.end()); //TEMOS QUE IMPLEMENTAR O SORT
-
-    return players_with_tag;
-}
-
 // funcao para criar novo jogador
 Player createPlayer(int id, string name, string pos) {
     Player newPlayer; 
@@ -383,14 +361,21 @@ void tagPlayersSearch(vector<string> tags) {
 vector<int> create_tag_list(string tag){
     vector<int> players_with_tag;
     tag.push_back('\0');
-    int key = hornerHash(tag, 1000);
+    int key = HornerHash(tag, 1000);
 
     for(int i = 0; i < Tag_players[key].size(); i++){
         int sofifa_id = Tag_players[key][i].second;
         int player_id = PlayerID[sofifa_id];
-        if(Tag_players[key][i].first == tag && playersList[player_id].count > 2) {
+
+
+        if(Tag_players[key][i].first == tag /*&& playersList[player_id].count > 0*/) {
             players_with_tag.push_back(playersList[player_id].id);
         }
     }
+    vector<int>::iterator ip;
+    ip = unique(players_with_tag.begin(), players_with_tag.begin() + players_with_tag.size());
+    players_with_tag.resize(distance(players_with_tag.begin(), ip));
+    sort(players_with_tag.begin(), players_with_tag.end()); //TEMOS QUE IMPLEMENTAR O SORT
+
     return players_with_tag;
 }
